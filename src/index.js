@@ -7,6 +7,7 @@ import JanLoading from "./components/JanLoading/index";
 import JanFlyBox from "./components/JanFlyBox";
 import Container from "./components/Container/index"
 import JanLogo from "./components/JanLogo"
+import BaseScrollList from "./components/BaseScrollList"
 
 export default function (Vue) {
     // Vue.use(Test);
@@ -18,4 +19,5 @@ export default function (Vue) {
     Vue.use(JanFlyBox);
     Vue.use(Container)
     Vue.use(JanLogo)
+    Vue.use(BaseScrollList)
 }
