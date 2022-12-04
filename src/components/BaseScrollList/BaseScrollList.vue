@@ -229,8 +229,9 @@ export default {
 
     const startAnimation = async () => {
       const config = actualConfig.value;
-      const { data,rowNum,moveNum ,duration} = config;
-      const totalLength = data.length;
+      const { rowNum,moveNum ,duration} = config;
+      // 解决了首次数据加载显示不全问题  不能直接取config.data.length
+      const totalLength = rowsData.value.length;
 
       if (totalLength < rowNum) return;
       const index = currentIndex.value;
