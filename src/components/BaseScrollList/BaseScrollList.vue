@@ -59,7 +59,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from "vue";
+import { ref, watch } from "vue";
 import { v4 as uuidv4 } from "uuid";
 import useScreen from "../../hooks/useScreen";
 import cloneDeep from "lodash/cloneDeep";
@@ -80,6 +80,8 @@ const defaultConfig = {
   headerHeight: 35,
   // 标题是否展示序号
   headerIndex: false,
+  // 序号列的数据内容
+  headerIndexData:[],
   // 序号列标题的内容
   headerIndexContent: "#",
   // 序号列标题的样式
@@ -127,6 +129,7 @@ export default {
     const rowBg = ref([]);
     const aligns = ref([]);
     const rowNum = ref(defaultConfig.rowNum);
+    const isAnimationStart = ref(true)
     let avgHeight;
 
     const handleHeader = (config) => {
@@ -146,7 +149,12 @@ export default {
         _headerStyle.unshift(config.headerIndexStyle);
         _rowStyle.unshift(config.rowIndexStyle);
         _rowsData.forEach((rows, index) => {
-          rows.unshift(index + 1);
+          // 处理序号列的数据
+          if (config.headerIndexData && config.headerIndexData.length && config.headerIndexData[index]){
+            rows.unshift(config.headerIndexData[index]);
+          }else{
+            rows.unshift(index + 1);
+          }
         });
         _aligns.unshift("center");
       }
@@ -228,6 +236,7 @@ export default {
     };
 
     const startAnimation = async () => {
+      if (!isAnimationStart.value) return;
       const config = actualConfig.value;
       const { rowNum,moveNum ,duration} = config;
       // 解决了首次数据加载显示不全问题  不能直接取config.data.length
@@ -247,6 +256,7 @@ export default {
       rowHeights.value = new Array(totalLength).fill(avgHeight)
 
       const waitTime = 300
+      if (!isAnimationStart.value) return;
       await new Promise((resolve,reject) => setTimeout(resolve,waitTime))
       // 将moveNum的行高度设置为0
       rowHeights.value.splice(0,moveNum,...new Array(moveNum).fill(0))
@@ -259,23 +269,37 @@ export default {
         currentIndex.value = isLast;
       }
 
+      if (!isAnimationStart.value) return;
       // 延迟操作 sleep
       await new Promise((resolve,reject) => setTimeout(resolve,duration - waitTime))
 
       await startAnimation()
     }
 
-    onMounted(() => {
+    const stopAnimation = () => {
+      isAnimationStart.value = false;
+    }
+
+    const update = () => {
+      // 停止前一次的动画
+      stopAnimation();
       const _actualConfig = assign(defaultConfig, props.config);
 
       rowsData.value = _actualConfig.data || [];
       handleHeader(_actualConfig);
-      handleRows(config);
+      handleRows(_actualConfig);
 
       actualConfig.value = _actualConfig;
       // 展示动画
+      isAnimationStart.value = true;
       startAnimation();
-    });
+
+    }
+
+    watch(() => props.config,() => {
+      update()
+    })
+
 
     return {
       id,
@@ -304,7 +328,7 @@ export default {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0 10px;
+    //padding: 0 10px;
     box-sizing: border-box;
   }
 
@@ -322,6 +346,9 @@ export default {
       align-items: center;
       transition: all 0.3s linear;
 
+      .base-scroll-list-columns{
+        height: 100%;
+      }
     }
   }
 
