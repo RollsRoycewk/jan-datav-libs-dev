@@ -30,18 +30,19 @@
     >
       <div
           class="base-scroll-list-rows"
-          v-for="(rowData, rowIndex) in currentRowData"
-          :key="rowIndex"
+          v-for="(rowData, index) in currentRowData"
+          :key="rowData.rowIndex"
           :style="{
-        height: `${rowHeights[rowIndex]}px`,
-        background: rowIndex % 2 === 0 ? rowBg[1] : rowBg[0],
+        height: `${rowHeights[index]}px`,
+        lineHeight:`${rowHeights[index]}px`,
+        background: rowData.rowIndex % 2 === 0 ? rowBg[1] : rowBg[0],
         fontSize: `${actualConfig.rowFontSize}px`,
         color:actualConfig.rowColor,
       }"
       >
         <div
-            class="base-scroll-list-columns"
-            v-for="(colData, colIndex) in rowData"
+            class="base-scroll-list-columns base-scroll-list-text"
+            v-for="(colData, colIndex) in rowData.data"
             :key="colData + colIndex"
             v-html="colData"
             :align="aligns[colIndex]"
@@ -126,6 +127,7 @@ export default {
     const rowBg = ref([]);
     const aligns = ref([]);
     const rowNum = ref(defaultConfig.rowNum);
+    let avgHeight;
 
     const handleHeader = (config) => {
       // 因为每一次对原数据的操作会触发重新渲染
@@ -185,10 +187,24 @@ export default {
       columnWidths.value = _columnWidth;
 
       headerData.value = _headerData;
-      rowsData.value = _rowsData;
+
       headerStyle.value = _headerStyle;
       rowStyle.value = _rowStyle;
       aligns.value = _aligns;
+
+      const { rowNum } = config;
+      if (_rowsData.length >= rowNum && _rowsData.length < rowNum * 2){
+        const newRowData = [..._rowsData,..._rowsData];
+        rowsData.value = newRowData.map((item,index) => ({
+          data:item,
+          rowIndex:index
+        }));
+      }else{
+        rowsData.value = _rowsData.map((item,index) => ({
+          data:item,
+          rowIndex:index
+        }));
+      }
     };
 
     const handleRows = (config) => {
@@ -202,7 +218,7 @@ export default {
         rowNum.value = rowsData.value.length;
       }
 
-      const avgHeight = unusedHeight / rowNum.value;
+      avgHeight = unusedHeight / rowNum.value;
       rowHeights.value = new Array(rowNum.value).fill(avgHeight);
 
       // 获取行背景色
@@ -226,6 +242,13 @@ export default {
       const rows = _rowsData.slice(index);
       rows.push(..._rowsData.slice( 0,index))
       currentRowData.value = rows;
+      // 先将所有行的高度还原
+      rowHeights.value = new Array(totalLength).fill(avgHeight)
+
+      const waitTime = 300
+      await new Promise((resolve,reject) => setTimeout(resolve,waitTime))
+      // 将moveNum的行高度设置为0
+      rowHeights.value.splice(0,moveNum,...new Array(moveNum).fill(0))
 
       currentIndex.value += moveNum;
       // 是否到达最后一组数据
@@ -236,7 +259,7 @@ export default {
       }
 
       // 延迟操作 sleep
-      await new Promise((resolve,reject) => setTimeout(resolve,duration))
+      await new Promise((resolve,reject) => setTimeout(resolve,duration - waitTime))
 
       await startAnimation()
     }
@@ -296,6 +319,7 @@ export default {
     .base-scroll-list-rows {
       display: flex;
       align-items: center;
+      transition: all 0.3s linear;
 
     }
   }
