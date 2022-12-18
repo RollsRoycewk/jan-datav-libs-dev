@@ -43,7 +43,7 @@
       <use
           :href="`#${pathId}`"
           stroke-width="3"
-          :stroke="starColor"
+          :stroke="startColor"
           :mask="`url(#${maskId})`"
       ></use>
 
@@ -66,7 +66,7 @@ export default {
       type:String,
       default:'#235fa7'
     },
-    starColor:{
+    startColor:{
       type:String,
       default:'#4fd2dd'
     },
@@ -132,9 +132,9 @@ export default {
   }
 
   .jan-fly-box-content{
-      width: 100%;
+    width: 100%;
     height: 100%;
-    padding: 5px;
+    padding: 2px;
     box-sizing: border-box;
   }
 }
